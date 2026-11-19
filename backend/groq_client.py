@@ -37,11 +37,8 @@ STRICT RULES:
 - SUBJECTIVE: Patient's complaints, history, duration, severity in their words
 - OBJECTIVE: Vitals if mentioned (BP, pulse, temp, SpO2, weight), physical exam findings, lab results
 - ASSESSMENT: Primary diagnosis with ICD-10 code if identifiable, differential diagnoses
-- PLAN: Medications (brand name + generic in parentheses + dose + frequency + duration),
-  investigations ordered, follow-up timing, lifestyle/dietary advice
-- Use local drug names as the doctor used them, add generic in parentheses
-- Do NOT invent information not present in the transcript
-- If a section has no data, write exactly: "Not documented in this encounter."
+- PLAN: Document all prescribed medications (brand name + generic in parentheses + dose + frequency + duration), investigations ordered, follow-up timing, and lifestyle/dietary advice. If the clinician did not explicitly state a treatment plan in the audio, provide recommended evidence-based clinical steps (suggested diagnostic investigations, supportive/symptomatic care, red flag warnings, and follow-up timeline) for physician review.
+- If SUBJECTIVE or OBJECTIVE has no mentioned data, write: "Not documented in this encounter."
 - Format each section header as the word only on its own line followed by a colon
 
 Output format (use exactly this structure):
