@@ -10,7 +10,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY", ""))
+_client = None
+
+def get_groq_client():
+    global _client
+    if _client is None:
+        _client = Groq(api_key=os.environ.get("GROQ_API_KEY", ""))
+    return _client
 
 MIME_MAP = {
     "mp3": "audio/mpeg",
@@ -61,6 +67,7 @@ def transcribe_audio(audio_path: str, language: str = None) -> str:
     ext = filename.rsplit(".", 1)[-1].lower()
     content_type = MIME_MAP.get(ext, "audio/mpeg")
 
+    client = get_groq_client()
     with open(audio_path, "rb") as f:
         response = client.audio.transcriptions.create(
             file=(filename, f, content_type),
@@ -87,6 +94,7 @@ def generate_soap_note(transcript: str, doctor_specialisation: str = "") -> dict
     )
     user_message = f"{spec_context}Transcript:\n\n{transcript}"
 
+    client = get_groq_client()
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
