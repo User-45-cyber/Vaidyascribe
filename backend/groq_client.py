@@ -84,10 +84,18 @@ def transcribe_audio(audio_path: str, language: str = None) -> str:
     return response
 
 
+MODELS_TO_TRY = [
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "llama3-8b-8192",
+    "mixtral-8x7b-32768",
+]
+
+
 def generate_soap_note(transcript: str, doctor_specialisation: str = "") -> dict:
     """
-    Generate structured SOAP note from transcript using Groq LLaMA 3.1 70B.
-    Returns dict with keys: subjective, objective, assessment, plan.
+    Generate structured SOAP note from transcript using Groq LLaMA.
+    Uses resilient fallback across available models.
     """
     spec_context = (
         f"The doctor is a {doctor_specialisation}. " if doctor_specialisation else ""
@@ -95,18 +103,29 @@ def generate_soap_note(transcript: str, doctor_specialisation: str = "") -> dict
     user_message = f"{spec_context}Transcript:\n\n{transcript}"
 
     client = get_groq_client()
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_message},
-        ],
-        max_tokens=1500,
-        temperature=0.2,
-    )
+    last_err = None
 
-    raw = response.choices[0].message.content
-    return parse_soap_sections(raw)
+    for model in MODELS_TO_TRY:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_message},
+                ],
+                max_tokens=1500,
+                temperature=0.2,
+            )
+            raw = response.choices[0].message.content
+            return parse_soap_sections(raw)
+        except Exception as e:
+            last_err = e
+            err_str = str(e).lower()
+            if "model" in err_str or "not found" in err_str or "404" in err_str:
+                continue
+            raise e
+
+    raise last_err
 
 
 def parse_soap_sections(raw_text: str) -> dict:
